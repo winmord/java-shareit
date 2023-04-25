@@ -1,5 +1,6 @@
 package ru.practicum.shareit.user.controller;
 
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.service.UserService;
@@ -16,7 +17,7 @@ public class UserController {
     }
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
+    public User createUser(@Validated @RequestBody User user) {
         return userService.createUser(user);
     }
 

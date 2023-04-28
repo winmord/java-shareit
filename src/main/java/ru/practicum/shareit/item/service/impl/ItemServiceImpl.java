@@ -1,5 +1,8 @@
 package ru.practicum.shareit.item.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.error.ItemNotFoundException;
@@ -19,7 +22,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class ItemServiceImpl implements ItemService {
+    private final Logger logger = LoggerFactory.getLogger(ItemServiceImpl.class);
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
 
@@ -39,7 +44,10 @@ public class ItemServiceImpl implements ItemService {
         Item item = ItemMapper.toItem(itemDto);
         item.setOwner(user.get());
 
-        return ItemMapper.toItemDto(itemRepository.createItem(item));
+        Item createdItem = itemRepository.createItem(item);
+        logger.info("Создана вещь с id={}", createdItem.getId());
+
+        return ItemMapper.toItemDto(createdItem);
     }
 
     @Override
@@ -55,9 +63,10 @@ public class ItemServiceImpl implements ItemService {
             throw new UserAccessDeniedException("У пользователя " + userId + " нет прав на изменение вещи " + itemId);
         }
 
-        return ItemMapper.toItemDto(
-                itemRepository.changeItem(itemId, ItemMapper.toItem(itemDto))
-        );
+        Item changedItem = itemRepository.changeItem(itemId, ItemMapper.toItem(itemDto));
+        logger.info("Обновлена вещь с id={}", changedItem.getId());
+
+        return ItemMapper.toItemDto(changedItem);
     }
 
     @Override
@@ -68,20 +77,31 @@ public class ItemServiceImpl implements ItemService {
             throw new ItemNotFoundException("Вещь " + itemId + " не найдена");
         }
 
-        return ItemMapper.toItemDto(item.get());
+        Item gotItem = item.get();
+        logger.info("Запрошена вещь с id={}", gotItem.getId());
+
+        return ItemMapper.toItemDto(gotItem);
     }
 
     @Override
     public Collection<ItemDto> getAllItems(Long userId) {
-        return itemRepository.getAllItems(userId).stream()
+        Collection<ItemDto> items = itemRepository.getAllItems(userId).stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
+
+        logger.info("Запрошено {} вещей", items.size());
+
+        return items;
     }
 
     @Override
     public Collection<ItemDto> searchItems(String text) {
-        return itemRepository.searchItems(text).stream()
+        Collection<ItemDto> items = itemRepository.searchItems(text).stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
+
+        logger.info("Найдено {} вещей", items.size());
+
+        return items;
     }
 }

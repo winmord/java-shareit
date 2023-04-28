@@ -1,5 +1,8 @@
 package ru.practicum.shareit.user.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.error.UserNotFoundException;
@@ -11,7 +14,9 @@ import java.util.Collection;
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService {
+    private final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
     private final UserRepository userRepository;
 
     @Autowired
@@ -20,7 +25,10 @@ public class UserServiceImpl implements UserService {
     }
 
     public User createUser(User user) {
-        return userRepository.createUser(user);
+        User createdUser = userRepository.createUser(user);
+        logger.info("Создан пользователь {}", createdUser.getId());
+
+        return createdUser;
     }
 
     public User getUser(Long userId) {
@@ -30,11 +38,16 @@ public class UserServiceImpl implements UserService {
             throwUserNotFoundError(userId);
         }
 
+        logger.info("Запрошен пользователь {}", userId);
+
         return user.get();
     }
 
     public Collection<User> getAllUsers() {
-        return userRepository.getAllUsers();
+        Collection<User> users = userRepository.getAllUsers();
+        logger.info("Запрошено {} пользователей", users.size());
+
+        return users;
     }
 
     public User updateUser(Long userId, User user) {
@@ -43,6 +56,8 @@ public class UserServiceImpl implements UserService {
         if (updatedUser.isEmpty()) {
             throwUserNotFoundError(userId);
         }
+
+        logger.info("Запрошен пользователь {}", userId);
 
         return updatedUser.get();
     }
@@ -53,6 +68,8 @@ public class UserServiceImpl implements UserService {
         if (user.isEmpty()) {
             throwUserNotFoundError(userId);
         }
+
+        logger.info("Удалён пользователь {}", userId);
 
         return user.get();
     }

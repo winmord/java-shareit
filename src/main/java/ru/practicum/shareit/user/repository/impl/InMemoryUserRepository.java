@@ -1,7 +1,7 @@
 package ru.practicum.shareit.user.repository.impl;
 
 import org.springframework.stereotype.Repository;
-import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.*;

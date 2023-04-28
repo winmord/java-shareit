@@ -29,7 +29,11 @@ public class InMemoryUserRepository implements UserRepository {
 
     @Override
     public Optional<User> getUser(Long userId) {
-        return Optional.of(users.get(userId));
+        try {
+            return Optional.of(users.get(userId));
+        } catch (RuntimeException e) {
+            return Optional.empty();
+        }
     }
 
     @Override

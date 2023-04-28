@@ -4,41 +4,64 @@ import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
 public class InMemoryItemRepository implements ItemRepository {
+    private Long autoIncrementId = 1L;
     private final Map<Long, Item> items = new HashMap<>();
 
     @Override
     public Item createItem(Item item) {
-        return items.put(item.getId(), item);
+        item.setId(autoIncrementId++);
+        items.put(item.getId(), item);
+        return item;
     }
 
     @Override
     public Item changeItem(Long itemId, Item item) {
-        items.put(itemId, item);
-        return items.get(itemId);
+        String itemName = item.getName();
+        String itemDescription = item.getDescription();
+        Boolean itemIsAvailable = item.getAvailable();
+
+        Item repositoryItem = items.get(itemId);
+
+        if (itemName != null && !Objects.equals(itemName, repositoryItem.getName())) {
+            repositoryItem.setName(itemName);
+        }
+
+        if (itemDescription != null && !Objects.equals(itemDescription, repositoryItem.getDescription())) {
+            repositoryItem.setDescription(itemDescription);
+        }
+
+        if (itemIsAvailable != null && !Objects.equals(itemIsAvailable, repositoryItem.getAvailable())) {
+            repositoryItem.setAvailable(itemIsAvailable);
+        }
+
+        return repositoryItem;
     }
 
     @Override
-    public Item getItem(Long itemId) {
-        return items.get(itemId);
+    public Optional<Item> getItem(Long itemId) {
+        return Optional.of(items.get(itemId));
     }
 
     @Override
-    public Collection<Item> getAllItems() {
-        return items.values();
+    public Collection<Item> getAllItems(Long userId) {
+        return items.values().stream()
+                .filter(item -> Objects.equals(item.getOwner().getId(), userId))
+                .collect(Collectors.toList());
     }
 
     @Override
     public Collection<Item> searchItems(String text) {
+        if (text.isBlank()) return new ArrayList<>();
+
         return items.values().stream()
-                .filter(item -> item.isAvailable()
-                        && (item.getName().contains(text) || item.getDescription().contains(text))
+                .filter(item -> item.getAvailable()
+                        && (item.getName().toLowerCase().contains(text.toLowerCase())
+                        || item.getDescription().toLowerCase().contains(text.toLowerCase()))
                 )
                 .collect(Collectors.toList());
     }

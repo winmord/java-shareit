@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ErrorHandler {
     private final Logger logger = LoggerFactory.getLogger(ErrorHandler.class);
+
     @ExceptionHandler({ItemNotFoundException.class, UserNotFoundException.class, UserAccessDeniedException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse itemNotFound(final RuntimeException e) {

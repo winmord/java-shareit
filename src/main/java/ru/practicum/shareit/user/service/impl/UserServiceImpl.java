@@ -6,12 +6,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.error.UserNotFoundException;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -24,14 +27,14 @@ public class UserServiceImpl implements UserService {
         this.userRepository = userRepository;
     }
 
-    public User createUser(User user) {
-        User createdUser = userRepository.createUser(user);
+    public UserDto createUser(UserDto userDto) {
+        User createdUser = userRepository.createUser(UserMapper.toUser(userDto));
         logger.info("Создан пользователь {}", createdUser.getId());
 
-        return createdUser;
+        return UserMapper.toUserDto(createdUser);
     }
 
-    public User getUser(Long userId) {
+    public UserDto getUser(Long userId) {
         Optional<User> user = userRepository.getUser(userId);
 
         if (user.isEmpty()) {
@@ -40,18 +43,20 @@ public class UserServiceImpl implements UserService {
 
         logger.info("Запрошен пользователь {}", userId);
 
-        return user.get();
+        return UserMapper.toUserDto(user.get());
     }
 
-    public Collection<User> getAllUsers() {
+    public Collection<UserDto> getAllUsers() {
         Collection<User> users = userRepository.getAllUsers();
         logger.info("Запрошено {} пользователей", users.size());
 
-        return users;
+        return users.stream()
+                .map(UserMapper::toUserDto)
+                .collect(Collectors.toList());
     }
 
-    public User updateUser(Long userId, User user) {
-        Optional<User> updatedUser = userRepository.updateUser(userId, user);
+    public UserDto updateUser(Long userId, UserDto userDto) {
+        Optional<User> updatedUser = userRepository.updateUser(userId, UserMapper.toUser(userDto));
 
         if (updatedUser.isEmpty()) {
             throwUserNotFoundError(userId);
@@ -59,10 +64,10 @@ public class UserServiceImpl implements UserService {
 
         logger.info("Запрошен пользователь {}", userId);
 
-        return updatedUser.get();
+        return UserMapper.toUserDto(updatedUser.get());
     }
 
-    public User deleteUser(Long userId) {
+    public UserDto deleteUser(Long userId) {
         Optional<User> user = userRepository.deleteUser(userId);
 
         if (user.isEmpty()) {
@@ -71,7 +76,7 @@ public class UserServiceImpl implements UserService {
 
         logger.info("Удалён пользователь {}", userId);
 
-        return user.get();
+        return UserMapper.toUserDto(user.get());
     }
 
     private void throwUserNotFoundError(Long userId) {

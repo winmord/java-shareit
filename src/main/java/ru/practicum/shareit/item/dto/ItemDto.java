@@ -3,7 +3,9 @@ package ru.practicum.shareit.item.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.validation.ValidationGroups;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -14,17 +16,17 @@ import javax.validation.constraints.NotNull;
 public class ItemDto {
     private final Long id;
 
-    @NotNull
-    @NotBlank
+    @NotNull(groups = ValidationGroups.Create.class)
+    @NotBlank(groups = ValidationGroups.Create.class)
     private final String name;
 
-    @NotNull
-    @NotBlank
+    @NotNull(groups = ValidationGroups.Create.class)
+    @NotBlank(groups = ValidationGroups.Create.class)
     private final String description;
 
-    @NotNull
+    @NotNull(groups = ValidationGroups.Create.class)
     private final Boolean available;
 
     private final User owner;
-    private final Long request;
+    private final ItemRequest request;
 }

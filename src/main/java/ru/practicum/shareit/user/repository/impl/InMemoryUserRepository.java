@@ -43,6 +43,8 @@ public class InMemoryUserRepository implements UserRepository {
 
     @Override
     public Optional<User> updateUser(Long userId, User user) {
+        if (!users.containsKey(userId)) return Optional.empty();
+
         User existingUser = users.get(userId);
 
         String name = user.getName();
@@ -65,6 +67,8 @@ public class InMemoryUserRepository implements UserRepository {
 
     @Override
     public Optional<User> deleteUser(Long userId) {
+        if (!users.containsKey(userId)) return Optional.empty();
+
         emails.remove(users.get(userId).getEmail());
         return Optional.of(users.remove(userId));
     }

@@ -56,12 +56,12 @@ public class InMemoryItemRepository implements ItemRepository {
 
     @Override
     public Collection<Item> searchItems(String text) {
-        if (text.isBlank()) return new ArrayList<>();
+        String lowerText = text.toLowerCase();
 
         return items.values().stream()
                 .filter(item -> item.getAvailable()
-                        && (item.getName().toLowerCase().contains(text.toLowerCase())
-                        || item.getDescription().toLowerCase().contains(text.toLowerCase()))
+                        && (item.getName().toLowerCase().contains(lowerText)
+                        || item.getDescription().toLowerCase().contains(lowerText))
                 )
                 .collect(Collectors.toList());
     }

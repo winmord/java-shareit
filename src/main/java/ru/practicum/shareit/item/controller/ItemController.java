@@ -5,8 +5,10 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
+import ru.practicum.shareit.validation.ValidationGroups;
 
 import java.util.Collection;
+import java.util.Collections;
 
 @RestController
 @RequestMapping("/items")
@@ -19,13 +21,13 @@ public class ItemController {
     }
 
     @PostMapping
-    public ItemDto createItem(@Validated @RequestBody ItemDto itemDto,
+    public ItemDto createItem(@Validated(ValidationGroups.Create.class) @RequestBody ItemDto itemDto,
                               @RequestHeader("X-Sharer-User-Id") Long userId) {
         return itemService.createItem(itemDto, userId);
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto changeItem(@RequestBody ItemDto itemDto,
+    public ItemDto changeItem(@Validated(ValidationGroups.Update.class) @RequestBody ItemDto itemDto,
                               @PathVariable Long itemId,
                               @RequestHeader("X-Sharer-User-Id") Long userId) {
         return itemService.changeItem(itemId, itemDto, userId);
@@ -42,7 +44,8 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public Collection<ItemDto> searchItems(@RequestParam String text) {
+    public Collection<ItemDto> searchItems(@RequestParam(name = "text") String text) {
+        if (text.isBlank()) return Collections.emptyList();
         return itemService.searchItems(text);
     }
 }

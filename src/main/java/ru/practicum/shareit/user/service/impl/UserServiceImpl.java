@@ -28,14 +28,18 @@ public class UserServiceImpl implements UserService {
     }
 
     public UserDto createUser(UserDto userDto) {
-        User createdUser = userRepository.createUser(UserMapper.toUser(userDto));
+        if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Недопустимый email: " + userDto.getEmail());
+        }
+
+        User createdUser = userRepository.save(UserMapper.toUser(userDto));
         logger.info("Создан пользователь {}", createdUser.getId());
 
         return UserMapper.toUserDto(createdUser);
     }
 
     public UserDto getUser(Long userId) {
-        Optional<User> user = userRepository.getUser(userId);
+        Optional<User> user = userRepository.findById(userId);
 
         if (user.isEmpty()) {
             throwUserNotFoundError(userId);
@@ -47,7 +51,7 @@ public class UserServiceImpl implements UserService {
     }
 
     public Collection<UserDto> getAllUsers() {
-        Collection<User> users = userRepository.getAllUsers();
+        Collection<User> users = userRepository.findAll();
         logger.info("Запрошено {} пользователей", users.size());
 
         return users.stream()
@@ -56,23 +60,34 @@ public class UserServiceImpl implements UserService {
     }
 
     public UserDto updateUser(Long userId, UserDto userDto) {
-        Optional<User> updatedUser = userRepository.updateUser(userId, UserMapper.toUser(userDto));
+        User existingUser = UserMapper.toUser(getUser(userId));
 
-        if (updatedUser.isEmpty()) {
-            throwUserNotFoundError(userId);
+        String name = userDto.getName();
+        if (name != null && !name.isBlank()) {
+            existingUser.setName(name);
         }
 
-        logger.info("Запрошен пользователь {}", userId);
+        String email = userDto.getEmail();
+        if (email != null) {
+            if (email.isBlank()) throw new IllegalArgumentException("Недопустимый email: " + email);
 
-        return UserMapper.toUserDto(updatedUser.get());
+            existingUser.setEmail(email);
+        }
+
+        User updatedUser = userRepository.save(existingUser);
+        logger.info("Обновлён пользователь {}", userId);
+
+        return UserMapper.toUserDto(updatedUser);
     }
 
     public UserDto deleteUser(Long userId) {
-        Optional<User> user = userRepository.deleteUser(userId);
+        Optional<User> user = userRepository.findById(userId);
 
         if (user.isEmpty()) {
             throwUserNotFoundError(userId);
         }
+
+        userRepository.deleteById(userId);
 
         logger.info("Удалён пользователь {}", userId);
 

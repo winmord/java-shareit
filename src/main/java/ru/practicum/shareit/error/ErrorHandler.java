@@ -9,7 +9,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -17,7 +19,12 @@ import java.util.stream.Collectors;
 public class ErrorHandler {
     private final Logger logger = LoggerFactory.getLogger(ErrorHandler.class);
 
-    @ExceptionHandler({ItemNotFoundException.class, UserNotFoundException.class, UserAccessDeniedException.class})
+    @ExceptionHandler({
+            ItemNotFoundException.class,
+            UserNotFoundException.class,
+            UserAccessDeniedException.class,
+            BookingNotFoundException.class
+    })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse itemNotFound(final RuntimeException e) {
         logger.info("item not found: {}", e.getMessage(), e);
@@ -32,6 +39,20 @@ public class ErrorHandler {
                 .map(FieldError::getField)
                 .collect(Collectors.toList())
                 .toString());
+    }
+
+    @ExceptionHandler({ItemUnavailableException.class, BookingStatusChangeDeniedException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse itemUnavailableError(final RuntimeException e) {
+        logger.info("item unavailable error: {}", e.getMessage(), e);
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler({MethodArgumentTypeMismatchException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse conversionError(final MethodArgumentTypeMismatchException e) {
+        logger.info("conversion error: {}", e.getMessage(), e);
+        return new ErrorResponse("Unknown state: " + Objects.requireNonNull(e.getValue()));
     }
 
     @ExceptionHandler

@@ -28,10 +28,6 @@ public class UserServiceImpl implements UserService {
     }
 
     public UserDto createUser(UserDto userDto) {
-        if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Недопустимый email: " + userDto.getEmail());
-        }
-
         User createdUser = userRepository.save(UserMapper.toUser(userDto));
         logger.info("Создан пользователь {}", createdUser.getId());
 

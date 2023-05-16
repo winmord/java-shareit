@@ -44,7 +44,7 @@ public class ItemServiceImpl implements ItemService {
         Item item = ItemMapper.toItem(itemDto);
         item.setOwner(user.get());
 
-        Item createdItem = itemRepository.createItem(item);
+        Item createdItem = itemRepository.save(item);
         logger.info("Создана вещь с id={}", createdItem.getId());
 
         return ItemMapper.toItemDto(createdItem);
@@ -52,7 +52,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto changeItem(Long itemId, ItemDto itemDto, Long userId) {
-        Optional<Item> item = itemRepository.getItem(itemId);
+        Optional<Item> item = itemRepository.findById(itemId);
 
         if (item.isEmpty()) {
             throw new ItemNotFoundException("Вещь " + itemId + " не найдена");
@@ -63,7 +63,25 @@ public class ItemServiceImpl implements ItemService {
             throw new UserAccessDeniedException("У пользователя " + userId + " нет прав на изменение вещи " + itemId);
         }
 
-        Item changedItem = itemRepository.changeItem(itemId, ItemMapper.toItem(itemDto));
+        String itemName = itemDto.getName();
+        String itemDescription = itemDto.getDescription();
+        Boolean itemIsAvailable = itemDto.getAvailable();
+
+        Item repositoryItem = item.get();
+
+        if (itemName != null && !Objects.equals(itemName, repositoryItem.getName())) {
+            repositoryItem.setName(itemName);
+        }
+
+        if (itemDescription != null && !Objects.equals(itemDescription, repositoryItem.getDescription())) {
+            repositoryItem.setDescription(itemDescription);
+        }
+
+        if (itemIsAvailable != null && !Objects.equals(itemIsAvailable, repositoryItem.getAvailable())) {
+            repositoryItem.setAvailable(itemIsAvailable);
+        }
+
+        Item changedItem = itemRepository.save(repositoryItem);
         logger.info("Обновлена вещь с id={}", changedItem.getId());
 
         return ItemMapper.toItemDto(changedItem);
@@ -71,7 +89,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto getItem(Long itemId) {
-        Optional<Item> item = itemRepository.getItem(itemId);
+        Optional<Item> item = itemRepository.findById(itemId);
 
         if (item.isEmpty()) {
             throw new ItemNotFoundException("Вещь " + itemId + " не найдена");
@@ -85,7 +103,13 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<ItemDto> getAllItems(Long userId) {
-        Collection<ItemDto> items = itemRepository.getAllItems(userId).stream()
+        Optional<User> owner = userRepository.findById(userId);
+
+        if (owner.isEmpty()) {
+            throw new UserNotFoundException("Пользователь " + userId + " не существует");
+        }
+
+        Collection<ItemDto> items = itemRepository.findAllByOwner(owner.get()).stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
 
@@ -96,7 +120,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<ItemDto> searchItems(String text) {
-        Collection<ItemDto> items = itemRepository.searchItems(text).stream()
+        Collection<ItemDto> items = itemRepository.search(text).stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
 

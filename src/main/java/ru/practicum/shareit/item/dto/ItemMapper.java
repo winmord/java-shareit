@@ -15,6 +15,9 @@ public class ItemMapper {
                 .owner(item.getOwner())
                 .available(item.getAvailable())
                 .request(item.getRequest())
+                .lastBooking(item.getLastBooking())
+                .nextBooking(item.getNextBooking())
+                .comments(item.getComments())
                 .build();
     }
 
@@ -24,6 +27,9 @@ public class ItemMapper {
                 .name(itemDto.getName())
                 .description(itemDto.getDescription())
                 .available(itemDto.getAvailable())
+                .lastBooking(itemDto.getLastBooking())
+                .nextBooking(itemDto.getNextBooking())
+                .comments(itemDto.getComments())
                 .build();
     }
 }

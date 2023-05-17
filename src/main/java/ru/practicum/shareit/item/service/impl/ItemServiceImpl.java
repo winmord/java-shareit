@@ -5,17 +5,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.error.ItemNotFoundException;
-import ru.practicum.shareit.error.UserAccessDeniedException;
-import ru.practicum.shareit.error.UserNotFoundException;
+import ru.practicum.shareit.booking.BookingStatus;
+import ru.practicum.shareit.booking.model.ShortBooking;
+import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.error.*;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
@@ -27,11 +31,15 @@ public class ItemServiceImpl implements ItemService {
     private final Logger logger = LoggerFactory.getLogger(ItemServiceImpl.class);
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
 
     @Autowired
-    public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository) {
+    public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository, BookingRepository bookingRepository, CommentRepository commentRepository) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
+        this.bookingRepository = bookingRepository;
+        this.commentRepository = commentRepository;
     }
 
     @Override
@@ -88,17 +96,22 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto getItem(Long itemId) {
-        Optional<Item> item = itemRepository.findById(itemId);
+    public ItemDto getItem(Long itemId, Long userId) {
+        Optional<Item> optionalItem = itemRepository.findById(itemId);
 
-        if (item.isEmpty()) {
+        if (optionalItem.isEmpty()) {
             throw new ItemNotFoundException("Вещь " + itemId + " не найдена");
         }
 
-        Item gotItem = item.get();
-        logger.info("Запрошена вещь с id={}", gotItem.getId());
+        Item item = optionalItem.get();
+        addItemBookings(item, userId);
 
-        return ItemMapper.toItemDto(gotItem);
+        Collection<Comment> comments = commentRepository.findAllByItemId(itemId);
+        item.setComments(comments);
+
+        logger.info("Запрошена вещь с id={}", item.getId());
+
+        return ItemMapper.toItemDto(item);
     }
 
     @Override
@@ -109,13 +122,20 @@ public class ItemServiceImpl implements ItemService {
             throw new UserNotFoundException("Пользователь " + userId + " не существует");
         }
 
-        Collection<ItemDto> items = itemRepository.findAllByOwner(owner.get()).stream()
-                .map(ItemMapper::toItemDto)
-                .collect(Collectors.toList());
+        Collection<Item> items = itemRepository.findAllByOwner(owner.get());
+
+        for (Item item : items) {
+            addItemBookings(item, userId);
+
+            Collection<Comment> comments = commentRepository.findAllByItemId(item.getId());
+            item.setComments(comments);
+        }
 
         logger.info("Запрошено {} вещей", items.size());
 
-        return items;
+        return items.stream()
+                .map(ItemMapper::toItemDto)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -127,5 +147,37 @@ public class ItemServiceImpl implements ItemService {
         logger.info("Найдено {} вещей", items.size());
 
         return items;
+    }
+
+    @Override
+    public Comment addComment(Long itemId, Comment comment, Long userId) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+
+        if (optionalUser.isEmpty()) {
+            throw new UserNotFoundException("Пользователь " + userId + " не существует");
+        }
+
+        User user = optionalUser.get();
+
+        if (bookingRepository.findAllByBookerIdAndItemIdAndEndBefore(userId, itemId, LocalDateTime.now()).isEmpty()) {
+            throw new ItemUnavailableException("Пользователь " + userId + " не бронировал вещь " + itemId);
+        }
+
+        comment.setAuthorName(user.getName());
+        comment.setItemId(itemId);
+        comment.setCreated(LocalDateTime.now());
+
+        return commentRepository.save(comment);
+    }
+
+    private void addItemBookings(Item item, Long userId) {
+        if (Objects.equals(item.getOwner().getId(), userId)) {
+            LocalDateTime now = LocalDateTime.now();
+
+            ShortBooking lastBooking = bookingRepository.findFirstByItemIdAndStartBeforeOrderByStartDesc(item.getId(), now);
+            ShortBooking nextBooking = bookingRepository.findFirstByItemIdAndStartAfterAndStatusNotOrderByStartAsc(item.getId(), now, BookingStatus.REJECTED);
+            item.setLastBooking(lastBooking);
+            item.setNextBooking(nextBooking);
+        }
     }
 }

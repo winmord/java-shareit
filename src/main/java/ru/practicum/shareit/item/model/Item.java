@@ -4,10 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.practicum.shareit.booking.model.ShortBooking;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
+import java.util.Collection;
 
 @Entity
 @Table(name = "ITEMS")
@@ -36,4 +38,13 @@ public class Item {
     @ManyToOne
     @JoinColumn(name = "REQUEST_ID")
     private ItemRequest request;
+
+    @Transient
+    private ShortBooking lastBooking;
+
+    @Transient
+    private ShortBooking nextBooking;
+
+    @Transient
+    private Collection<Comment> comments;
 }

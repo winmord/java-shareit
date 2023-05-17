@@ -9,7 +9,6 @@ import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
-import java.util.Collection;
 
 @Entity
 @Table(name = "ITEMS")
@@ -44,7 +43,4 @@ public class Item {
 
     @Transient
     private ShortBooking nextBooking;
-
-    @Transient
-    private Collection<Comment> comments;
 }

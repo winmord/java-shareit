@@ -23,9 +23,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -109,12 +107,11 @@ public class ItemServiceImpl implements ItemService {
         Item item = optionalItem.get();
         addItemBookings(item, userId);
 
-        //Collection<Comment> comments = commentRepository.findAllByItemId(itemId);
-        //item.setComments(comments);
+        Collection<Comment> comments = commentRepository.findAllByItemId(itemId);
 
         logger.info("Запрошена вещь с id={}", item.getId());
 
-        return ItemMapper.toItemDto(item);
+        return ItemMapper.toItemDtoWithComments(item, comments);
     }
 
     @Override
@@ -127,18 +124,18 @@ public class ItemServiceImpl implements ItemService {
 
         Collection<Item> items = itemRepository.findAllByOwner(owner.get());
 
-        /*for (Item item : items) {
+        Collection<ItemDto> itemDtos = new ArrayList<>();
+
+        for (Item item : items) {
             addItemBookings(item, userId);
 
             Collection<Comment> comments = commentRepository.findAllByItemId(item.getId());
-            item.setComments(comments);
-        }*/
+            itemDtos.add(ItemMapper.toItemDtoWithComments(item, comments));
+        }
 
         logger.info("Запрошено {} вещей", items.size());
 
-        return items.stream()
-                .map(ItemMapper::toItemDto)
-                .collect(Collectors.toList());
+        return itemDtos;
     }
 
     @Override
@@ -162,13 +159,20 @@ public class ItemServiceImpl implements ItemService {
 
         User user = optionalUser.get();
 
+        Optional<Item> optionalItem = itemRepository.findById(itemId);
+
+        if (optionalItem.isEmpty()) {
+            throw new ItemNotFoundException("Вещь " + itemId + " не существует");
+        }
+
+        Item item = optionalItem.get();
+
         if (bookingRepository.findAllByBookerIdAndItemIdAndEndBefore(userId, itemId, LocalDateTime.now()).isEmpty()) {
             throw new ItemUnavailableException("Пользователь " + userId + " не бронировал вещь " + itemId);
         }
 
-        comment.setAuthorName(user.getName());
-        comment.setItemId(itemId);
-        comment.setCreated(LocalDateTime.now());
+        comment.setAuthor(user);
+        comment.setItem(item);
 
         return commentRepository.save(comment);
     }

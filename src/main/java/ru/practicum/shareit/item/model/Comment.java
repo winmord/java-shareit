@@ -25,9 +25,13 @@ public class Comment {
     @NotBlank
     private String text;
 
+    @ManyToOne
+    @JoinColumn
+    private Item item;
+
     @Column(name = "CREATED")
     private LocalDateTime created;
 
     private String authorName;
-    private Long itemId;
+    //private Long itemId;
 }

@@ -167,7 +167,7 @@ public class ItemServiceImpl implements ItemService {
         }
 
         comment.setAuthorName(user.getName());
-        comment.setItemId(itemId);
+        //comment.setItemId(itemId);
         comment.setCreated(LocalDateTime.now());
 
         return commentRepository.save(comment);

@@ -28,11 +28,11 @@ public class Booking {
     @Column(name = "END_DATE", nullable = false)
     private LocalDateTime end;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ITEM_ID")
     private Item item;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "BOOKER_ID")
     private User booker;
 

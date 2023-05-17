@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.model.ShortBooking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
@@ -46,6 +47,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional
     public ItemDto createItem(ItemDto itemDto, Long userId) {
         Optional<User> user = userRepository.findById(userId);
         if (user.isEmpty()) {
@@ -62,6 +64,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional
     public ItemDto changeItem(Long itemId, ItemDto itemDto, Long userId) {
         Optional<Item> item = itemRepository.findById(itemId);
 
@@ -99,6 +102,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ItemDto getItem(Long itemId, Long userId) {
         Optional<Item> optionalItem = itemRepository.findById(itemId);
 
@@ -119,6 +123,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ItemDto> getAllItems(Long userId) {
         Optional<User> owner = userRepository.findById(userId);
 
@@ -146,6 +151,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ItemDto> searchItems(String text) {
         Collection<ItemDto> items = itemRepository.search(text).stream()
                 .map(ItemMapper::toItemDto)
@@ -157,7 +163,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Comment addComment(Long itemId, Comment comment, Long userId) {
+    @Transactional
+    public CommentDto addComment(Long itemId, CommentDto commentDto, Long userId) {
         Optional<User> optionalUser = userRepository.findById(userId);
 
         if (optionalUser.isEmpty()) {
@@ -178,10 +185,12 @@ public class ItemServiceImpl implements ItemService {
             throw new ItemUnavailableException("Пользователь " + userId + " не бронировал вещь " + itemId);
         }
 
+        Comment comment = CommentMapper.toComment(commentDto);
+
         comment.setAuthor(user);
         comment.setItem(item);
 
-        return commentRepository.save(comment);
+        return CommentMapper.toCommentDto(commentRepository.save(comment));
     }
 
     private void addItemBookings(Item item, Long userId) {

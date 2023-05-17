@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.error.UserNotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
@@ -27,6 +28,8 @@ public class UserServiceImpl implements UserService {
         this.userRepository = userRepository;
     }
 
+    @Override
+    @Transactional
     public UserDto createUser(UserDto userDto) {
         User createdUser = userRepository.save(UserMapper.toUser(userDto));
         logger.info("Создан пользователь {}", createdUser.getId());
@@ -34,6 +37,8 @@ public class UserServiceImpl implements UserService {
         return UserMapper.toUserDto(createdUser);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public UserDto getUser(Long userId) {
         Optional<User> user = userRepository.findById(userId);
 
@@ -46,6 +51,8 @@ public class UserServiceImpl implements UserService {
         return UserMapper.toUserDto(user.get());
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public Collection<UserDto> getAllUsers() {
         Collection<User> users = userRepository.findAll();
         logger.info("Запрошено {} пользователей", users.size());
@@ -55,6 +62,8 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional
     public UserDto updateUser(Long userId, UserDto userDto) {
         User existingUser = UserMapper.toUser(getUser(userId));
 
@@ -76,6 +85,8 @@ public class UserServiceImpl implements UserService {
         return UserMapper.toUserDto(updatedUser);
     }
 
+    @Override
+    @Transactional
     public UserDto deleteUser(Long userId) {
         Optional<User> user = userRepository.findById(userId);
 

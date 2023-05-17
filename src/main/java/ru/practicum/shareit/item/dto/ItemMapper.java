@@ -1,6 +1,5 @@
 package ru.practicum.shareit.item.dto;
 
-import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 
 import java.util.Collection;
@@ -23,7 +22,7 @@ public class ItemMapper {
                 .build();
     }
 
-    public static ItemDto toItemDtoWithComments(Item item, Collection<Comment> comments) {
+    public static ItemDto toItemDtoWithComments(Item item, Collection<CommentDto> comments) {
         return ItemDto.builder()
                 .id(item.getId())
                 .name(item.getName())

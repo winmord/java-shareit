@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import ru.practicum.shareit.booking.model.ShortBooking;
-import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.validation.ValidationGroups;
@@ -36,5 +35,5 @@ public class ItemDto {
     private final ShortBooking lastBooking;
     private final ShortBooking nextBooking;
 
-    private final Collection<Comment> comments;
+    private final Collection<CommentDto> comments;
 }

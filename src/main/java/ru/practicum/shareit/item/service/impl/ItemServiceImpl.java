@@ -12,6 +12,8 @@ import ru.practicum.shareit.error.ItemNotFoundException;
 import ru.practicum.shareit.error.ItemUnavailableException;
 import ru.practicum.shareit.error.UserAccessDeniedException;
 import ru.practicum.shareit.error.UserNotFoundException;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.CommentMapper;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
@@ -107,7 +109,9 @@ public class ItemServiceImpl implements ItemService {
         Item item = optionalItem.get();
         addItemBookings(item, userId);
 
-        Collection<Comment> comments = commentRepository.findAllByItemId(itemId);
+        Collection<CommentDto> comments = commentRepository.findAllByItemId(itemId).stream()
+                .map(CommentMapper::toCommentDto)
+                .collect(Collectors.toList());
 
         logger.info("Запрошена вещь с id={}", item.getId());
 
@@ -129,7 +133,10 @@ public class ItemServiceImpl implements ItemService {
         for (Item item : items) {
             addItemBookings(item, userId);
 
-            Collection<Comment> comments = commentRepository.findAllByItemId(item.getId());
+            Collection<CommentDto> comments = commentRepository.findAllByItemId(item.getId()).stream()
+                    .map(CommentMapper::toCommentDto)
+                    .collect(Collectors.toList());
+
             itemDtos.add(ItemMapper.toItemDtoWithComments(item, comments));
         }
 

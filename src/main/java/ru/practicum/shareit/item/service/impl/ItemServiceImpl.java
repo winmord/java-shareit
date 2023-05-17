@@ -109,8 +109,8 @@ public class ItemServiceImpl implements ItemService {
         Item item = optionalItem.get();
         addItemBookings(item, userId);
 
-        Collection<Comment> comments = commentRepository.findAllByItemId(itemId);
-        item.setComments(comments);
+        //Collection<Comment> comments = commentRepository.findAllByItemId(itemId);
+        //item.setComments(comments);
 
         logger.info("Запрошена вещь с id={}", item.getId());
 
@@ -127,12 +127,12 @@ public class ItemServiceImpl implements ItemService {
 
         Collection<Item> items = itemRepository.findAllByOwner(owner.get());
 
-        for (Item item : items) {
+        /*for (Item item : items) {
             addItemBookings(item, userId);
 
             Collection<Comment> comments = commentRepository.findAllByItemId(item.getId());
             item.setComments(comments);
-        }
+        }*/
 
         logger.info("Запрошено {} вещей", items.size());
 

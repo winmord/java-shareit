@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import ru.practicum.shareit.booking.BookingState;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
@@ -141,7 +142,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Collection<BookingDto> getAllBookings(Long userId, BookingStatus status) {
+    public Collection<BookingDto> getAllBookings(Long userId, BookingState state) {
         Optional<User> optionalUser = userRepository.findById(userId);
 
         if (optionalUser.isEmpty()) {
@@ -153,7 +154,7 @@ public class BookingServiceImpl implements BookingService {
 
         Sort sort = Sort.by(Sort.Direction.DESC, "start");
 
-        switch (status) {
+        switch (state) {
             case ALL:
                 bookings = bookingRepository.findAllByBookerId(userId, sort);
                 break;
@@ -167,10 +168,8 @@ public class BookingServiceImpl implements BookingService {
                 bookings = bookingRepository.findAllByBookerIdAndStartBeforeAndEndAfter(userId, now, now, sort);
                 break;
             case WAITING:
-            case APPROVED:
             case REJECTED:
-            case CANCELED:
-                bookings = bookingRepository.findAllByBookerIdAndStatus(userId, status, sort);
+                bookings = bookingRepository.findAllByBookerIdAndStatus(userId, BookingStatus.valueOf(state.toString()), sort);
                 break;
         }
 
@@ -180,7 +179,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Collection<BookingDto> getOwnerBookings(Long userId, BookingStatus status) {
+    public Collection<BookingDto> getOwnerBookings(Long userId, BookingState state) {
         Optional<User> optionalUser = userRepository.findById(userId);
 
         if (optionalUser.isEmpty()) {
@@ -191,7 +190,7 @@ public class BookingServiceImpl implements BookingService {
         LocalDateTime now = LocalDateTime.now();
         Sort sort = Sort.by(Sort.Direction.DESC, "start");
 
-        switch (status) {
+        switch (state) {
             case ALL:
                 bookings = bookingRepository.findAllByItemOwnerId(userId, sort);
                 break;
@@ -205,10 +204,8 @@ public class BookingServiceImpl implements BookingService {
                 bookings = bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndAfter(userId, now, now, sort);
                 break;
             case WAITING:
-            case APPROVED:
             case REJECTED:
-            case CANCELED:
-                bookings = bookingRepository.findAllByItemOwnerIdAndStatus(userId, status, sort);
+                bookings = bookingRepository.findAllByItemOwnerIdAndStatus(userId, BookingStatus.valueOf(state.toString()), sort);
                 break;
         }
 

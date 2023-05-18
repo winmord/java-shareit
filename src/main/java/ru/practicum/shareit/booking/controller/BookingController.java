@@ -3,7 +3,7 @@ package ru.practicum.shareit.booking.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.booking.BookingStatus;
+import ru.practicum.shareit.booking.BookingState;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.booking.service.BookingService;
@@ -41,13 +41,13 @@ public class BookingController {
 
     @GetMapping
     public Collection<BookingDto> getAllBookings(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                 @RequestParam(name = "state", required = false, defaultValue = "ALL") BookingStatus status) {
-        return bookingService.getAllBookings(userId, status);
+                                                 @RequestParam(name = "state", required = false, defaultValue = "ALL") BookingState state) {
+        return bookingService.getAllBookings(userId, state);
     }
 
     @GetMapping("/owner")
     public Collection<BookingDto> getOwnerBookings(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                   @RequestParam(name = "state", required = false, defaultValue = "ALL") BookingStatus status) {
-        return bookingService.getOwnerBookings(userId, status);
+                                                   @RequestParam(name = "state", required = false, defaultValue = "ALL") BookingState state) {
+        return bookingService.getOwnerBookings(userId, state);
     }
 }

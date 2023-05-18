@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import ru.practicum.shareit.booking.model.ShortBooking;
-import ru.practicum.shareit.request.dto.ItemRequestDto;
-import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.validation.ValidationGroups;
 
 import javax.validation.constraints.NotBlank;
@@ -28,9 +26,6 @@ public class ItemDto {
 
     @NotNull(groups = ValidationGroups.Create.class)
     private final Boolean available;
-
-    private final UserDto owner;
-    private final ItemRequestDto request;
 
     private final ShortBooking lastBooking;
     private final ShortBooking nextBooking;

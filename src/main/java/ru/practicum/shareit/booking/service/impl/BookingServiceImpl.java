@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
+import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.service.BookingService;
@@ -43,14 +44,14 @@ public class BookingServiceImpl implements BookingService {
 
     @SneakyThrows
     @Override
-    public BookingDto createBooking(BookingDto bookingDto, Long userId) {
-        if (bookingDto.getStart().equals(bookingDto.getEnd())
-                || bookingDto.getStart().isAfter(bookingDto.getEnd())) {
+    public BookingDto createBooking(BookingShortDto bookingShortDto, Long userId) {
+        if (bookingShortDto.getStart().equals(bookingShortDto.getEnd())
+                || bookingShortDto.getStart().isAfter(bookingShortDto.getEnd())) {
             throw new MethodArgumentNotValidException(new MethodParameter(
-                    this.getClass().getDeclaredMethod("createBooking", BookingDto.class, Long.class), 0), new BeanPropertyBindingResult(bookingDto, "bookingDto"));
+                    this.getClass().getDeclaredMethod("createBooking", BookingShortDto.class, Long.class), 0), new BeanPropertyBindingResult(bookingShortDto, "bookingShortDto"));
         }
 
-        Long itemId = bookingDto.getItemId();
+        Long itemId = bookingShortDto.getItemId();
         Optional<Item> optionalItem = itemRepository.findById(itemId);
         Optional<User> optionalUser = userRepository.findById(userId);
 
@@ -72,7 +73,7 @@ public class BookingServiceImpl implements BookingService {
             throw new UserNotFoundException("Пользователь " + userId + " является владельцем вещи " + itemId);
         }
 
-        Booking booking = BookingMapper.toBooking(bookingDto);
+        Booking booking = BookingMapper.toBooking(bookingShortDto);
         booking.setStatus(BookingStatus.WAITING);
         booking.setItem(item);
         booking.setBooker(optionalUser.get());

@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -149,24 +150,26 @@ public class BookingServiceImpl implements BookingService {
         Collection<Booking> bookings = Collections.emptyList();
         LocalDateTime now = LocalDateTime.now();
 
+        Sort sort = Sort.by(Sort.Direction.DESC, "start");
+
         switch (status) {
             case ALL:
-                bookings = bookingRepository.findAllByBookerIdOrderByStartDesc(userId);
+                bookings = bookingRepository.findAllByBookerId(userId, sort);
                 break;
             case FUTURE:
-                bookings = bookingRepository.findAllByBookerIdAndStartAfterOrderByStartDesc(userId, now);
+                bookings = bookingRepository.findAllByBookerIdAndStartAfter(userId, now, sort);
                 break;
             case PAST:
-                bookings = bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(userId, now);
+                bookings = bookingRepository.findAllByBookerIdAndEndBefore(userId, now, sort);
                 break;
             case CURRENT:
-                bookings = bookingRepository.findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(userId, now, now);
+                bookings = bookingRepository.findAllByBookerIdAndStartBeforeAndEndAfter(userId, now, now, sort);
                 break;
             case WAITING:
             case APPROVED:
             case REJECTED:
             case CANCELED:
-                bookings = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(userId, status);
+                bookings = bookingRepository.findAllByBookerIdAndStatus(userId, status, sort);
                 break;
         }
 
@@ -185,25 +188,26 @@ public class BookingServiceImpl implements BookingService {
 
         Collection<Booking> bookings = Collections.emptyList();
         LocalDateTime now = LocalDateTime.now();
+        Sort sort = Sort.by(Sort.Direction.DESC, "start");
 
         switch (status) {
             case ALL:
-                bookings = bookingRepository.findAllByItemOwnerIdOrderByStartDesc(userId);
+                bookings = bookingRepository.findAllByItemOwnerId(userId, sort);
                 break;
             case FUTURE:
-                bookings = bookingRepository.findAllByItemOwnerIdAndStartAfterOrderByStartDesc(userId, now);
+                bookings = bookingRepository.findAllByItemOwnerIdAndStartAfter(userId, now, sort);
                 break;
             case PAST:
-                bookings = bookingRepository.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(userId, now);
+                bookings = bookingRepository.findAllByItemOwnerIdAndEndBefore(userId, now, sort);
                 break;
             case CURRENT:
-                bookings = bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(userId, now, now);
+                bookings = bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndAfter(userId, now, now, sort);
                 break;
             case WAITING:
             case APPROVED:
             case REJECTED:
             case CANCELED:
-                bookings = bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, status);
+                bookings = bookingRepository.findAllByItemOwnerIdAndStatus(userId, status, sort);
                 break;
         }
 

@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.BookingStatus;
@@ -197,8 +198,13 @@ public class ItemServiceImpl implements ItemService {
         if (Objects.equals(item.getOwner().getId(), userId)) {
             LocalDateTime now = LocalDateTime.now();
 
-            ShortBooking lastBooking = bookingRepository.findFirstByItemIdAndStartBeforeOrderByStartDesc(item.getId(), now);
-            ShortBooking nextBooking = bookingRepository.findFirstByItemIdAndStartAfterAndStatusNotOrderByStartAsc(item.getId(), now, BookingStatus.REJECTED);
+            ShortBooking lastBooking = bookingRepository.findFirstByItemIdAndStartBefore(item.getId(), now, Sort.by(Sort.Direction.DESC, "start"));
+            ShortBooking nextBooking = bookingRepository.findFirstByItemIdAndStartAfterAndStatusNot(
+                    item.getId(),
+                    now,
+                    BookingStatus.REJECTED,
+                    Sort.by(Sort.Direction.ASC, "start")
+            );
             item.setLastBooking(lastBooking);
             item.setNextBooking(nextBooking);
         }

@@ -8,7 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.BookingStatus;
-import ru.practicum.shareit.booking.model.ShortBooking;
+import ru.practicum.shareit.booking.model.BookingShort;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.error.ItemNotFoundException;
 import ru.practicum.shareit.error.ItemUnavailableException;
@@ -198,8 +198,8 @@ public class ItemServiceImpl implements ItemService {
         if (Objects.equals(item.getOwner().getId(), userId)) {
             LocalDateTime now = LocalDateTime.now();
 
-            ShortBooking lastBooking = bookingRepository.findFirstByItemIdAndStartBefore(item.getId(), now, Sort.by(Sort.Direction.DESC, "start"));
-            ShortBooking nextBooking = bookingRepository.findFirstByItemIdAndStartAfterAndStatusNot(
+            BookingShort lastBooking = bookingRepository.findFirstByItemIdAndStartBefore(item.getId(), now, Sort.by(Sort.Direction.DESC, "start"));
+            BookingShort nextBooking = bookingRepository.findFirstByItemIdAndStartAfterAndStatusNot(
                     item.getId(),
                     now,
                     BookingStatus.REJECTED,

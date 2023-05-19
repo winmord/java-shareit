@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item.dto;
 
+import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.item.model.Item;
 
 import java.util.Collection;
@@ -15,8 +16,8 @@ public class ItemMapper {
                 .name(item.getName())
                 .description(item.getDescription())
                 .available(item.getAvailable())
-                .lastBooking(item.getLastBooking())
-                .nextBooking(item.getNextBooking())
+                .lastBooking(item.getLastBooking() == null ? null : BookingMapper.toBookingShortDto(item.getLastBooking()))
+                .nextBooking(item.getNextBooking() == null ? null : BookingMapper.toBookingShortDto(item.getNextBooking()))
                 .build();
     }
 
@@ -26,8 +27,8 @@ public class ItemMapper {
                 .name(item.getName())
                 .description(item.getDescription())
                 .available(item.getAvailable())
-                .lastBooking(item.getLastBooking())
-                .nextBooking(item.getNextBooking())
+                .lastBooking(item.getLastBooking() == null ? null : BookingMapper.toBookingShortDto(item.getLastBooking()))
+                .nextBooking(item.getNextBooking() == null ? null : BookingMapper.toBookingShortDto(item.getNextBooking()))
                 .comments(comments)
                 .build();
     }
@@ -38,8 +39,6 @@ public class ItemMapper {
                 .name(itemDto.getName())
                 .description(itemDto.getDescription())
                 .available(itemDto.getAvailable())
-                .lastBooking(itemDto.getLastBooking())
-                .nextBooking(itemDto.getNextBooking())
                 .build();
     }
 }

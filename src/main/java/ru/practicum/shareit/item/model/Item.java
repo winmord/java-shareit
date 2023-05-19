@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.shareit.booking.model.ShortBooking;
+import ru.practicum.shareit.booking.model.BookingShort;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
@@ -39,8 +39,8 @@ public class Item {
     private ItemRequest request;
 
     @Transient
-    private ShortBooking lastBooking;
+    private BookingShort lastBooking;
 
     @Transient
-    private ShortBooking nextBooking;
+    private BookingShort nextBooking;
 }

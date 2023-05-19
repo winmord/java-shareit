@@ -108,7 +108,7 @@ public class BookingServiceImpl implements BookingService {
 
         Long ownerId = booking.getItem().getOwner().getId();
         if (!userId.equals(ownerId)) {
-            throw new UserAccessDeniedException("Пользователь " + ownerId + " не является владельцем вещи " + booking.getItem().getId());
+            throw new UserAccessDeniedException("Пользователь " + userId + " не является владельцем вещи " + booking.getItem().getId());
         }
 
         BookingStatus status = Boolean.TRUE.equals(approved) ? BookingStatus.APPROVED : BookingStatus.REJECTED;

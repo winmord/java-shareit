@@ -3,12 +3,12 @@ package ru.practicum.shareit.item.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import ru.practicum.shareit.request.ItemRequest;
-import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.validation.ValidationGroups;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.Collection;
 
 @Data
 @AllArgsConstructor
@@ -27,6 +27,8 @@ public class ItemDto {
     @NotNull(groups = ValidationGroups.Create.class)
     private final Boolean available;
 
-    private final User owner;
-    private final ItemRequest request;
+    private final BookingShortDto lastBooking;
+    private final BookingShortDto nextBooking;
+
+    private final Collection<CommentDto> comments;
 }

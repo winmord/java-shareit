@@ -41,14 +41,18 @@ public class ItemController {
     }
 
     @GetMapping
-    public Collection<ItemDto> getAllItems(@RequestHeader("X-Sharer-User-Id") Long userId) {
-        return itemService.getAllItems(userId);
+    public Collection<ItemDto> getAllItems(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                           @RequestParam(name = "from", required = false, defaultValue = "0") Long from,
+                                           @RequestParam(name = "size", required = false, defaultValue = "20") Long size) {
+        return itemService.getAllItems(userId, from, size);
     }
 
     @GetMapping("/search")
-    public Collection<ItemDto> searchItems(@RequestParam(name = "text") String text) {
+    public Collection<ItemDto> searchItems(@RequestParam(name = "text") String text,
+                                           @RequestParam(name = "from", required = false, defaultValue = "0") Long from,
+                                           @RequestParam(name = "size", required = false, defaultValue = "20") Long size) {
         if (text.isBlank()) return Collections.emptyList();
-        return itemService.searchItems(text);
+        return itemService.searchItems(text, from, size);
     }
 
     @PostMapping("/{itemId}/comment")

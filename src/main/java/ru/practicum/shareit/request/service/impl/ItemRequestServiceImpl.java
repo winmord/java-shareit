@@ -1,0 +1,134 @@
+package ru.practicum.shareit.request.service.impl;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import ru.practicum.shareit.error.ItemRequestNotFoundException;
+import ru.practicum.shareit.error.UserNotFoundException;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.dto.ItemRequestDto;
+import ru.practicum.shareit.request.dto.ItemRequestMapper;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.repository.ItemRequestRepository;
+import ru.practicum.shareit.request.service.ItemRequestService;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.repository.UserRepository;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
+public class ItemRequestServiceImpl implements ItemRequestService {
+    private final Logger logger = LoggerFactory.getLogger(ItemRequestServiceImpl.class);
+    private final ItemRequestRepository itemRequestRepository;
+    private final UserRepository userRepository;
+
+    private final ItemRepository itemRepository;
+
+    @Autowired
+    public ItemRequestServiceImpl(ItemRequestRepository itemRequestRepository, UserRepository userRepository, ItemRepository itemRepository) {
+        this.itemRequestRepository = itemRequestRepository;
+        this.userRepository = userRepository;
+        this.itemRepository = itemRepository;
+    }
+
+    @Override
+    public ItemRequestDto addItemRequest(ItemRequestDto itemRequestDto, Long userId) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+
+        if (optionalUser.isEmpty()) {
+            throw new UserNotFoundException("Пользователь " + userId + " не найден");
+        }
+
+        User user = optionalUser.get();
+        ItemRequest itemRequest = ItemRequestMapper.toItemRequest(itemRequestDto, user);
+        ItemRequest savedItemRequest = itemRequestRepository.save(itemRequest);
+
+        logger.info("Сохранён запрос " + savedItemRequest.getId());
+
+        return ItemRequestMapper.toItemRequestDto(savedItemRequest);
+    }
+
+    @Override
+    public Collection<ItemRequestDto> getItemRequests(Long userId) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+
+        if (optionalUser.isEmpty()) {
+            throw new UserNotFoundException("Пользователь " + userId + " не найден");
+        }
+
+        User user = optionalUser.get();
+
+        Collection<ItemRequest> itemRequests = itemRequestRepository.findAllByRequestor(user);
+        List<ItemRequestDto> itemRequestDtos = new ArrayList<>();
+
+        for (ItemRequest itemRequest : itemRequests) {
+            Collection<ItemDto> items = itemRepository.findAllByRequest(itemRequest).stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
+            itemRequestDtos.add(ItemRequestMapper.toItemRequestDtoWithItems(itemRequest, items));
+        }
+
+        logger.info("Получено " + itemRequests.size() + " запросов пользователя " + userId);
+
+        return itemRequestDtos;
+    }
+
+    @Override
+    public ItemRequestDto getItemRequest(Long userId, Long requestId) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+
+        if (optionalUser.isEmpty()) {
+            throw new UserNotFoundException("Пользователь " + userId + " не найден");
+        }
+
+        Optional<ItemRequest> optionalItemRequest = itemRequestRepository.findById(requestId);
+
+        if (optionalItemRequest.isEmpty()) {
+            throw new ItemRequestNotFoundException("Запрос" + requestId + " не найден");
+        }
+
+        ItemRequest itemRequest = optionalItemRequest.get();
+        logger.info("Получен запрос " + requestId);
+
+        Collection<ItemDto> items = itemRepository.findAllByRequest(itemRequest).stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
+
+        return ItemRequestMapper.toItemRequestDtoWithItems(itemRequest, items);
+    }
+
+    @Override
+    public Collection<ItemRequestDto> getOtherItemRequests(Long userId, Long from, Long size) {
+        checkUserExists(userId);
+
+        if (from < 0 || size <= 0) {
+            throw new IllegalArgumentException("Некорректные параметры пагинации");
+        }
+
+        Pageable pageable = PageRequest.of(from.intValue() / size.intValue(), size.intValue(), Sort.by("created").descending());
+
+        Collection<ItemRequest> itemRequests = itemRequestRepository.findAllByRequestorIdNot(userId, pageable).toList();
+        List<ItemRequestDto> itemRequestDtos = new ArrayList<>();
+
+        for (ItemRequest itemRequest : itemRequests) {
+            Collection<ItemDto> items = itemRepository.findAllByRequest(itemRequest).stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
+            itemRequestDtos.add(ItemRequestMapper.toItemRequestDtoWithItems(itemRequest, items));
+        }
+
+        logger.info("Получено " + itemRequests.size() + " запросов пользователя " + userId);
+
+        return itemRequestDtos;
+    }
+
+    private void checkUserExists(Long userId) {
+        if (userRepository.findById(userId).isEmpty()) {
+            throw new UserNotFoundException("Пользователь " + userId + " не найден");
+        }
+    }
+}

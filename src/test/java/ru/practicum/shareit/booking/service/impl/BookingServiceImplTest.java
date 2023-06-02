@@ -1,55 +1,132 @@
 package ru.practicum.shareit.booking.service.impl;
 
-import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.mockito.Mockito;
+import org.springframework.data.domain.Page;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.practicum.shareit.booking.BookingState;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.service.BookingService;
-import ru.practicum.shareit.error.BookingStatusChangeDeniedException;
-import ru.practicum.shareit.error.UserAccessDeniedException;
+import ru.practicum.shareit.error.*;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
-
-import javax.persistence.EntityManager;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 
-@Transactional
-@SpringBootTest(
-        properties = "db.name=test",
-        webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
 class BookingServiceImplTest {
-    private final EntityManager em;
-    private final BookingService bookingService;
+
+    private BookingService bookingService;
 
     private final List<User> users = List.of(
-            User.builder().name("user1").email("user1@mail.ru").build(),
-            User.builder().name("user2").email("user2@mail.ru").build(),
-            User.builder().name("user3").email("user3@mail.ru").build());
+            User.builder().id(1L).name("user1").email("user1@mail.ru").build(),
+            User.builder().id(2L).name("user2").email("user2@mail.ru").build(),
+            User.builder().id(3L).name("user3").email("user3@mail.ru").build());
 
     private final List<Item> items = List.of(
-            Item.builder().name("item1").description("this is item1").available(true).build(),
-            Item.builder().name("item2").description("this is item2").available(true).build(),
-            Item.builder().name("item3").description("this is item3").available(true).build());
+            Item.builder()
+                    .id(1L)
+                    .name("item1")
+                    .description("this is item1")
+                    .available(true)
+                    .owner(users.get(0))
+                    .build(),
+            Item.builder()
+                    .id(2L)
+                    .name("item2")
+                    .description("this is item2")
+                    .available(false)
+                    .owner(users.get(1))
+                    .build(),
+            Item.builder()
+                    .id(3L)
+                    .name("item3")
+                    .description("this is item3")
+                    .available(true)
+                    .owner(users.get(1))
+                    .build()
+    );
 
     private final List<Booking> bookings = List.of(
-            Booking.builder().build(),
-            Booking.builder().build(),
-            Booking.builder().build()
+            Booking.builder()
+                    .id(1L)
+                    .start(dates.get(0))
+                    .end(dates.get(1))
+                    .item(items.get(0))
+                    .booker(users.get(0))
+                    .status(BookingStatus.WAITING)
+                    .build(),
+            Booking.builder()
+                    .id(2L)
+                    .start(dates.get(1))
+                    .end(dates.get(2))
+                    .item(items.get(1))
+                    .booker(users.get(1))
+                    .status(BookingStatus.APPROVED)
+                    .build(),
+            Booking.builder()
+                    .id(3L)
+                    .start(dates.get(2))
+                    .end(dates.get(3))
+                    .item(items.get(2))
+                    .booker(users.get(2))
+                    .status(BookingStatus.REJECTED)
+                    .build(),
+            Booking.builder()
+                    .id(5L)
+                    .start(dates.get(0))
+                    .end(dates.get(1))
+                    .item(items.get(1))
+                    .booker(users.get(0))
+                    .status(BookingStatus.APPROVED)
+                    .build()
+    );
+
+    private final List<BookingShortDto> shortBookingsDto = List.of(
+            BookingShortDto.builder()
+                    .id(bookings.get(0).getId())
+                    .start(bookings.get(0).getStart())
+                    .end(bookings.get(0).getEnd())
+                    .itemId(bookings.get(0).getItem().getId())
+                    .bookerId(bookings.get(0).getBooker().getId())
+                    .build(),
+            BookingShortDto.builder()
+                    .id(bookings.get(1).getId())
+                    .start(bookings.get(1).getStart())
+                    .end(bookings.get(1).getEnd())
+                    .itemId(4L)
+                    .bookerId(bookings.get(1).getBooker().getId())
+                    .build(),
+            BookingShortDto.builder()
+                    .id(bookings.get(2).getId())
+                    .start(bookings.get(2).getStart())
+                    .end(bookings.get(2).getStart())
+                    .itemId(bookings.get(2).getItem().getId())
+                    .bookerId(bookings.get(2).getBooker().getId())
+                    .build(),
+            BookingShortDto.builder()
+                    .id(bookings.get(3).getId())
+                    .start(bookings.get(3).getStart())
+                    .end(bookings.get(3).getEnd())
+                    .itemId(2L)
+                    .bookerId(bookings.get(3).getBooker().getId())
+                    .build()
     );
 
     private static final List<LocalDateTime> dates = new ArrayList<>();
@@ -68,93 +145,146 @@ class BookingServiceImplTest {
     }
 
     @BeforeEach
-    public void installEntities() {
-        users.forEach(em::persist);
+    public void installService() {
+        BookingRepository bookingRepository = Mockito.mock(BookingRepository.class);
+        ItemRepository itemRepository = Mockito.mock(ItemRepository.class);
+        UserRepository userRepository = Mockito.mock(UserRepository.class);
 
-        items.get(0).setOwner(users.get(0));
-        items.get(1).setOwner(users.get(1));
-        items.get(2).setOwner(users.get(1));
-        items.forEach(em::persist);
+        for (int i = 0; i < 3; i++) {
+            Mockito.when(itemRepository.findById(items.get(i).getId()))
+                    .thenReturn(Optional.of(items.get(i)));
 
-        bookings.get(0).setItem(items.get(0));
-        bookings.get(1).setItem(items.get(1));
-        bookings.get(2).setItem(items.get(2));
+            Mockito.when(userRepository.findById(users.get(i).getId()))
+                    .thenReturn(Optional.of(users.get(i)));
 
-        bookings.get(0).setBooker(users.get(1));
-        bookings.get(1).setBooker(users.get(2));
-        bookings.get(2).setBooker(users.get(2));
+            Mockito.when(bookingRepository.findById(bookings.get(i).getId()))
+                    .thenReturn(Optional.of(bookings.get(i)));
+        }
 
-        bookings.get(0).setStart(dates.get(0).minusHours(1));
-        bookings.get(1).setStart(dates.get(1).minusHours(1));
-        bookings.get(2).setStart(dates.get(2).minusHours(1));
+        Mockito.when(bookingRepository.findById(bookings.get(3).getId()))
+                .thenReturn(Optional.of(bookings.get(3)));
 
-        bookings.get(0).setEnd(dates.get(3).minusHours(1));
-        bookings.get(1).setEnd(dates.get(2).minusHours(1));
-        bookings.get(2).setEnd(dates.get(3).minusHours(1));
+        Mockito.when(bookingRepository.findAllByBookerIdAndStartBeforeAndEndAfter(anyLong(), any(), any(), any()))
+                .thenReturn(Page.empty());
 
-        bookings.get(0).setStatus(BookingStatus.APPROVED);
-        bookings.get(1).setStatus(BookingStatus.WAITING);
-        bookings.get(2).setStatus(BookingStatus.REJECTED);
+        Mockito.when(bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndAfter(anyLong(), any(), any(), any()))
+                .thenReturn(Page.empty());
 
-        bookings.forEach(em::persist);
+        Mockito.when(itemRepository.findById(4L))
+                .thenReturn(Optional.empty());
+
+        Mockito.when(userRepository.findById(4L))
+                .thenReturn(Optional.empty());
+
+        Mockito.when(bookingRepository.save(any()))
+                .thenReturn(bookings.get(0));
+
+        bookingService = new BookingServiceImpl(bookingRepository, itemRepository, userRepository);
+    }
+
+    @Test
+    void createBooking() {
+        Assertions.assertThrows(
+                MethodArgumentNotValidException.class,
+                () -> bookingService.createBooking(shortBookingsDto.get(2), 2L));
+
+        UserNotFoundException userNotFoundException = Assertions.assertThrows(
+                UserNotFoundException.class,
+                () -> bookingService.createBooking(shortBookingsDto.get(0), 4L));
+
+        assertEquals("Пользователь 4 не найден", userNotFoundException.getMessage());
+
+        userNotFoundException = Assertions.assertThrows(
+                UserNotFoundException.class,
+                () -> bookingService.createBooking(shortBookingsDto.get(0), 1L));
+
+        assertEquals("Пользователь 1 является владельцем вещи 1", userNotFoundException.getMessage());
+
+        ItemNotFoundException itemNotFoundException = Assertions.assertThrows(
+                ItemNotFoundException.class,
+                () -> bookingService.createBooking(shortBookingsDto.get(1), 2L));
+
+        assertEquals("Вещь 4 не найдена", itemNotFoundException.getMessage());
+
+        ItemUnavailableException itemUnavailableException = Assertions.assertThrows(
+                ItemUnavailableException.class,
+                () -> bookingService.createBooking(shortBookingsDto.get(3), 2L));
+
+        assertEquals("Вещь 2 недоступна", itemUnavailableException.getMessage());
+
+        BookingDto savedBookingDto = bookingService.createBooking(shortBookingsDto.get(0), 2L);
+        assertEquals(bookings.get(0).getId(), savedBookingDto.getId());
     }
 
     @Test
     void approveBooking() {
-        Long bookingId1 = bookings.get(0).getId();
-        Long userId1 = users.get(0).getId();
+        BookingStatusChangeDeniedException bookingStatusChangeDeniedException = Assertions.assertThrows(
+                BookingStatusChangeDeniedException.class,
+                () -> bookingService.approveBooking(shortBookingsDto.get(2).getId(), true, 2L));
 
-        assertThrows(BookingStatusChangeDeniedException.class, () -> bookingService.approveBooking(bookingId1, true, userId1));
+        assertEquals("Бронирование 3 уже имеет статус REJECTED", bookingStatusChangeDeniedException.getMessage());
 
-        Long bookingId2 = bookings.get(1).getId();
-        assertThrows(UserAccessDeniedException.class, () -> bookingService.approveBooking(bookingId2, true, userId1));
+        BookingDto savedBookingDto = bookingService.approveBooking(shortBookingsDto.get(0).getId(), true, 1L);
+        assertEquals(bookings.get(0).getId(), savedBookingDto.getId());
+    }
 
-        BookingDto approvedBooking = bookingService.approveBooking(bookingId2, true, users.get(1).getId());
+    @Test
+    void getBooking() {
+        UserNotFoundException userNotFoundException = Assertions.assertThrows(
+                UserNotFoundException.class,
+                () -> bookingService.getBooking(shortBookingsDto.get(0).getId(), 4L));
 
-        assertThat(approvedBooking.getStatus(), equalTo(BookingStatus.APPROVED));
+        assertEquals("Пользователь 4 не найден", userNotFoundException.getMessage());
+
+        BookingNotFoundException bookingNotFoundException = Assertions.assertThrows(
+                BookingNotFoundException.class,
+                () -> bookingService.getBooking(4L, 1L));
+
+        assertEquals("Бронирование 4 не найдено", bookingNotFoundException.getMessage());
+
+        UserAccessDeniedException userAccessDeniedException = Assertions.assertThrows(
+                UserAccessDeniedException.class,
+                () -> bookingService.getBooking(shortBookingsDto.get(0).getId(), 2L));
+
+        assertEquals("Пользователь 2 не является ни арендатором ни владельцем", userAccessDeniedException.getMessage());
+
+        BookingDto savedBookingDto = bookingService.getBooking(shortBookingsDto.get(0).getId(), 1L);
+        assertEquals(bookings.get(0).getId(), savedBookingDto.getId());
     }
 
     @Test
     void getAllBookings() {
-        List<BookingDto> ownerBookings = new ArrayList<>(bookingService.getAllBookings(users.get(2).getId(), BookingState.ALL, 0L, 5L));
-        assertThat(ownerBookings, hasSize(2));
-        assertThat(ownerBookings.get(0).getItem().getName(), equalTo(items.get(2).getName()));
+        UserNotFoundException userNotFoundException = Assertions.assertThrows(
+                UserNotFoundException.class,
+                () -> bookingService.getAllBookings(4L, BookingState.ALL, 0L, 2L));
 
-        ownerBookings = new ArrayList<>(bookingService.getAllBookings(users.get(2).getId(), BookingState.REJECTED, 0L, 5L));
-        assertThat(ownerBookings, hasSize(1));
-        assertThat(ownerBookings.get(0).getItem().getName(), equalTo(items.get(2).getName()));
+        assertEquals("Пользователь 4 не найден", userNotFoundException.getMessage());
 
-        ownerBookings = new ArrayList<>(bookingService.getAllBookings(users.get(2).getId(), BookingState.WAITING, 0L, 5L));
-        assertThat(ownerBookings, hasSize(1));
-        assertThat(ownerBookings.get(0).getItem().getName(), equalTo(items.get(1).getName()));
+        IllegalArgumentException illegalArgumentException = Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> bookingService.getAllBookings(1L, BookingState.ALL, -1L, 2L));
 
-        ownerBookings = new ArrayList<>(bookingService.getAllBookings(users.get(2).getId(), BookingState.FUTURE, 0L, 5L));
-        assertThat(ownerBookings, hasSize(2));
-        assertThat(ownerBookings.get(0).getItem().getName(), equalTo(items.get(2).getName()));
+        assertEquals("Некорректные параметры пагинации", illegalArgumentException.getMessage());
 
-        ownerBookings = new ArrayList<>(bookingService.getAllBookings(users.get(1).getId(), BookingState.PAST, 0L, 5L));
-        assertThat(ownerBookings, empty());
+        Collection<BookingDto> savedBookingDtos = bookingService.getAllBookings(1L, BookingState.CURRENT, 0L, 2L);
+        assertEquals(0, savedBookingDtos.size());
     }
 
     @Test
     void getOwnerBookings() {
-        List<BookingDto> ownerBookings = new ArrayList<>(bookingService.getOwnerBookings(users.get(1).getId(), BookingState.ALL, 0L, 5L));
-        assertThat(ownerBookings, hasSize(2));
-        assertThat(ownerBookings.get(0).getItem().getName(), equalTo(items.get(2).getName()));
+        UserNotFoundException userNotFoundException = Assertions.assertThrows(
+                UserNotFoundException.class,
+                () -> bookingService.getOwnerBookings(4L, BookingState.ALL, 0L, 2L));
 
-        ownerBookings = new ArrayList<>(bookingService.getOwnerBookings(users.get(1).getId(), BookingState.REJECTED, 0L, 5L));
-        assertThat(ownerBookings, hasSize(1));
-        assertThat(ownerBookings.get(0).getItem().getName(), equalTo(items.get(2).getName()));
+        assertEquals("Пользователь 4 не найден", userNotFoundException.getMessage());
 
-        ownerBookings = new ArrayList<>(bookingService.getOwnerBookings(users.get(1).getId(), BookingState.WAITING, 0L, 5L));
-        assertThat(ownerBookings, hasSize(1));
-        assertThat(ownerBookings.get(0).getItem().getName(), equalTo(items.get(1).getName()));
+        IllegalArgumentException illegalArgumentException = Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> bookingService.getOwnerBookings(1L, BookingState.ALL, -1L, 2L));
 
-        ownerBookings = new ArrayList<>(bookingService.getOwnerBookings(users.get(1).getId(), BookingState.FUTURE, 0L, 5L));
-        assertThat(ownerBookings, hasSize(2));
-        assertThat(ownerBookings.get(0).getItem().getName(), equalTo(items.get(2).getName()));
+        assertEquals("Некорректные параметры пагинации", illegalArgumentException.getMessage());
 
-        ownerBookings = new ArrayList<>(bookingService.getOwnerBookings(users.get(1).getId(), BookingState.PAST, 0L, 5L));
-        assertThat(ownerBookings, empty());
+        Collection<BookingDto> savedBookingDtos = bookingService.getOwnerBookings(1L, BookingState.CURRENT, 0L, 2L);
+        assertEquals(0, savedBookingDtos.size());
     }
 }

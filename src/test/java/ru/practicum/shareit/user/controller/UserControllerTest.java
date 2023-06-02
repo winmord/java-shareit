@@ -13,6 +13,7 @@ import ru.practicum.shareit.user.service.UserService;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -88,6 +89,7 @@ class UserControllerTest {
 
         mvc.perform(get("/users"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(3)))
                 .andExpect(jsonPath("$[0].id", is(users.get(0).getId()), Long.class))
                 .andExpect(jsonPath("$[0].name", is(users.get(0).getName())))
                 .andExpect(jsonPath("$[0].email", is(users.get(0).getEmail())));

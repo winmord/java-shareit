@@ -1,5 +1,6 @@
 package ru.practicum.shareit.request.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +19,7 @@ public class ItemRequestDto {
     @NotNull
     @NotBlank
     private final String description;
-
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private final LocalDateTime created;
 
     private Collection<ItemDto> items;

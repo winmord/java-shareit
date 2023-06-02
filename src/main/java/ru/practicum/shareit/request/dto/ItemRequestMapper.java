@@ -30,8 +30,10 @@ public class ItemRequestMapper {
 
     public static ItemRequest toItemRequest(ItemRequestDto itemRequestDto, User requestor) {
         return ItemRequest.builder()
+                .id(itemRequestDto.getId())
                 .description(itemRequestDto.getDescription())
                 .requestor(requestor)
+                .created(itemRequestDto.getCreated())
                 .build();
     }
 }

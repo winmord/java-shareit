@@ -92,7 +92,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         Optional<ItemRequest> optionalItemRequest = itemRequestRepository.findById(requestId);
 
         if (optionalItemRequest.isEmpty()) {
-            throw new ItemRequestNotFoundException("Запрос" + requestId + " не найден");
+            throw new ItemRequestNotFoundException("Запрос " + requestId + " не найден");
         }
 
         ItemRequest itemRequest = optionalItemRequest.get();

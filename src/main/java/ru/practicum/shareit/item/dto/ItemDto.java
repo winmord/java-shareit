@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import ru.practicum.shareit.booking.dto.BookingShortDto;
+import ru.practicum.shareit.validation.FieldUpdateConstraint;
 import ru.practicum.shareit.validation.ValidationGroups;
 
 import javax.validation.constraints.NotBlank;
@@ -18,10 +19,12 @@ public class ItemDto {
 
     @NotNull(groups = ValidationGroups.Create.class)
     @NotBlank(groups = ValidationGroups.Create.class)
+    @FieldUpdateConstraint(groups = ValidationGroups.Update.class)
     private final String name;
 
     @NotNull(groups = ValidationGroups.Create.class)
     @NotBlank(groups = ValidationGroups.Create.class)
+    @FieldUpdateConstraint(groups = ValidationGroups.Update.class)
     private final String description;
 
     @NotNull(groups = ValidationGroups.Create.class)

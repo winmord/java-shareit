@@ -9,9 +9,9 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = UserFieldsUpdateConstraintValidator.class)
-public @interface UserFieldsUpdateConstraint {
-    String message() default "{value.UserFieldsUpdateConstraint.message}";
+@Constraint(validatedBy = FieldUpdateConstraintValidator.class)
+public @interface FieldUpdateConstraint {
+    String message() default "{value.FieldUpdateConstraint.message}";
 
     Class<?>[] groups() default {};
 

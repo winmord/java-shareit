@@ -1,90 +1,144 @@
 package ru.practicum.shareit.request.service.impl;
 
-import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.mockito.Mockito;
+import ru.practicum.shareit.error.ItemRequestNotFoundException;
+import ru.practicum.shareit.error.UserNotFoundException;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
+import ru.practicum.shareit.request.dto.ItemRequestMapper;
 import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.request.service.ItemRequestService;
 import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.repository.UserRepository;
 
-import javax.persistence.EntityManager;
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Transactional
-@SpringBootTest(
-        properties = "db.name=test",
-        webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
 class ItemRequestServiceImplTest {
-    private final EntityManager em;
-    private final ItemRequestService itemRequestService;
+
+    ItemRequestService itemRequestService;
 
     private final List<User> users = List.of(
-            User.builder().name("user1").email("user1@mail.ru").build(),
-            User.builder().name("user2").email("user2@mail.ru").build(),
-            User.builder().name("user3").email("user3@mail.ru").build());
+            User.builder().id(1L).name("user1").email("user1@mail.ru").build(),
+            User.builder().id(2L).name("user2").email("user2@mail.ru").build(),
+            User.builder().id(3L).name("user3").email("user3@mail.ru").build());
 
     private final List<Item> items = List.of(
-            Item.builder().name("item1").description("this is item1").available(true).build(),
-            Item.builder().name("item2").description("this is item2").available(true).build(),
-            Item.builder().name("item3").description("this is item3").available(true).build());
+            Item.builder()
+                    .id(1L)
+                    .name("item1")
+                    .description("this is item1")
+                    .available(true)
+                    .owner(users.get(0))
+                    .build(),
+            Item.builder()
+                    .id(2L)
+                    .name("item2")
+                    .description("this is item2")
+                    .available(false)
+                    .owner(users.get(1))
+                    .build(),
+            Item.builder()
+                    .id(3L)
+                    .name("item3")
+                    .description("this is item3")
+                    .available(true)
+                    .owner(users.get(1))
+                    .build()
+    );
 
     private final List<ItemRequest> requests = List.of(
-            ItemRequest.builder().description("this is request1").build(),
-            ItemRequest.builder().description("this is request2").build(),
-            ItemRequest.builder().description("this is request3").build());
+            ItemRequest.builder()
+                    .id(1L)
+                    .description("this is request1")
+                    .requestor(users.get(0))
+                    .created(LocalDateTime.now())
+                    .build(),
+            ItemRequest.builder()
+                    .id(2L)
+                    .description("this is request2")
+                    .requestor(users.get(1))
+                    .created(LocalDateTime.now())
+                    .build(),
+            ItemRequest.builder()
+                    .id(3L)
+                    .description("this is request3")
+                    .requestor(users.get(2))
+                    .created(LocalDateTime.now())
+                    .build());
 
     @BeforeEach
-    public void installEntities() {
-        users.forEach(em::persist);
+    public void installService() {
+        ItemRepository itemRepository = Mockito.mock(ItemRepository.class);
+        UserRepository userRepository = Mockito.mock(UserRepository.class);
+        ItemRequestRepository itemRequestRepository = Mockito.mock(ItemRequestRepository.class);
 
-        items.get(0).setOwner(users.get(0));
-        items.get(1).setOwner(users.get(1));
-        items.get(2).setOwner(users.get(1));
-        items.forEach(em::persist);
+        for (int i = 0; i < 3; i++) {
+            Mockito.when(itemRepository.findById(items.get(i).getId()))
+                    .thenReturn(Optional.of(items.get(i)));
 
-        requests.get(0).setRequestor(users.get(1));
-        requests.get(1).setRequestor(users.get(2));
-        requests.get(2).setRequestor(users.get(2));
-        requests.forEach(em::persist);
+            Mockito.when(itemRepository.save(items.get(i)))
+                    .thenReturn(items.get(i));
+
+            Mockito.when(userRepository.findById(users.get(i).getId()))
+                    .thenReturn(Optional.of(users.get(i)));
+
+            Mockito.when(itemRequestRepository.findById(requests.get(i).getId()))
+                    .thenReturn(Optional.of(requests.get(i)));
+
+            Mockito.when(itemRequestRepository.save(requests.get(i)))
+                    .thenReturn(requests.get(i));
+        }
+
+        Mockito.when(itemRepository.findById(4L))
+                .thenReturn(Optional.empty());
+
+        Mockito.when(userRepository.findById(4L))
+                .thenReturn(Optional.empty());
+
+        items.get(0).setRequest(requests.get(0));
+
+        itemRequestService = new ItemRequestServiceImpl(
+                itemRequestRepository,
+                userRepository,
+                itemRepository);
     }
 
     @Test
-    void getItemRequests() {
-        List<ItemRequestDto> serviceItemRequests = new ArrayList<>(itemRequestService.getItemRequests(users.get(2).getId()));
+    void addItemRequest() {
+        UserNotFoundException userNotFoundException = Assertions.assertThrows(
+                UserNotFoundException.class,
+                () -> itemRequestService.addItemRequest(ItemRequestMapper.toItemRequestDto(requests.get(0)), 4L));
 
-        assertThat(serviceItemRequests, hasSize(2));
+        assertEquals("Пользователь 4 не найден", userNotFoundException.getMessage());
 
-        for (int i = 0; i < serviceItemRequests.size(); i++) {
-            assertThat(serviceItemRequests.get(i).getId(), notNullValue());
-            assertThat(serviceItemRequests.get(i).getDescription(), equalTo(requests.get(i + 1).getDescription()));
-        }
+        ItemRequestDto itemRequestDto = itemRequestService.addItemRequest(ItemRequestMapper.toItemRequestDto(requests.get(0)), users.get(0).getId());
+        assertEquals(requests.get(0).getId(), itemRequestDto.getId());
     }
 
     @Test
-    void getOtherItemRequests() {
-        List<ItemRequestDto> serviceItemRequests = new ArrayList<>(itemRequestService.getOtherItemRequests(users.get(0).getId(), 0L, 5L));
+    void getItemRequest() {
+        UserNotFoundException userNotFoundException = Assertions.assertThrows(
+                UserNotFoundException.class,
+                () -> itemRequestService.getItemRequest(4L, requests.get(0).getId()));
 
-        assertThat(serviceItemRequests, hasSize(3));
+        assertEquals("Пользователь 4 не найден", userNotFoundException.getMessage());
 
-        List<ItemRequest> sortedRequests = requests.stream()
-                .sorted(Comparator.comparing(ItemRequest::getCreated).reversed())
-                .collect(Collectors.toList());
+        ItemRequestNotFoundException itemRequestNotFoundException = Assertions.assertThrows(
+                ItemRequestNotFoundException.class,
+                () -> itemRequestService.getItemRequest(users.get(0).getId(), 4L));
 
-        for (int i = 0; i < serviceItemRequests.size(); i++) {
-            assertThat(serviceItemRequests.get(i).getId(), notNullValue());
-            assertThat(serviceItemRequests.get(i).getDescription(), equalTo(sortedRequests.get(i).getDescription()));
-        }
+        assertEquals("Запрос 4 не найден", itemRequestNotFoundException.getMessage());
+
+        ItemRequestDto itemRequestDto = itemRequestService.getItemRequest(users.get(0).getId(), requests.get(0).getId());
+        assertEquals(requests.get(0).getId(), itemRequestDto.getId());
     }
 }

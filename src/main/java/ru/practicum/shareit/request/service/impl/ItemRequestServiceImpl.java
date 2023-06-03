@@ -21,10 +21,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.validation.PagingParametersChecker;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -70,16 +67,10 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         User user = optionalUser.get();
 
         Collection<ItemRequest> itemRequests = itemRequestRepository.findAllByRequestor(user);
-        List<ItemRequestDto> itemRequestDtos = new ArrayList<>();
-
-        for (ItemRequest itemRequest : itemRequests) {
-            Collection<ItemDto> items = itemRepository.findAllByRequest(itemRequest).stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
-            itemRequestDtos.add(ItemRequestMapper.toItemRequestDtoWithItems(itemRequest, items));
-        }
 
         logger.info("Получено {} запросов пользователя {}", itemRequests.size(), userId);
 
-        return itemRequestDtos;
+        return addItemsToRequests(itemRequests);
     }
 
     @Override
@@ -112,21 +103,25 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         Pageable pageable = PageRequest.of(from.intValue() / size.intValue(), size.intValue(), Sort.by("created").descending());
 
         Collection<ItemRequest> itemRequests = itemRequestRepository.findAllByRequestorIdNot(userId, pageable).toList();
-        List<ItemRequestDto> itemRequestDtos = new ArrayList<>();
-
-        for (ItemRequest itemRequest : itemRequests) {
-            Collection<ItemDto> items = itemRepository.findAllByRequest(itemRequest).stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
-            itemRequestDtos.add(ItemRequestMapper.toItemRequestDtoWithItems(itemRequest, items));
-        }
 
         logger.info("Получено {} запросов пользователя {}", itemRequests.size(), userId);
 
-        return itemRequestDtos;
+        return addItemsToRequests(itemRequests);
     }
 
     private void checkUserExists(Long userId) {
         if (userRepository.findById(userId).isEmpty()) {
             throw new UserNotFoundException("Пользователь " + userId + " не найден");
         }
+    }
+
+    private Collection<ItemRequestDto> addItemsToRequests(Collection<ItemRequest> itemRequests) {
+        Map<Long, List<ItemDto>> items = itemRepository.findAllByRequestIdIn(itemRequests.stream().map(ItemRequest::getId).collect(Collectors.toList()))
+                .stream()
+                .map(ItemMapper::toItemDto)
+                .collect(Collectors.groupingBy(ItemDto::getRequestId, Collectors.toList()));
+        return itemRequests.stream()
+                .map(r -> ItemRequestMapper.toItemRequestDtoWithItems(r, items.getOrDefault(r.getId(), Collections.emptyList())))
+                .collect(Collectors.toList());
     }
 }

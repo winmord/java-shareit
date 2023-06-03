@@ -4,16 +4,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.model.BookingShort;
 import ru.practicum.shareit.booking.repository.BookingRepository;
-import ru.practicum.shareit.error.ItemNotFoundException;
-import ru.practicum.shareit.error.ItemUnavailableException;
-import ru.practicum.shareit.error.UserAccessDeniedException;
-import ru.practicum.shareit.error.UserNotFoundException;
+import ru.practicum.shareit.error.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CommentMapper;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -23,8 +22,11 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.item.service.ItemService;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.validation.PagingParametersChecker;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -39,12 +41,19 @@ public class ItemServiceImpl implements ItemService {
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
 
+    private final ItemRequestRepository itemRequestRepository;
+
     @Autowired
-    public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository, BookingRepository bookingRepository, CommentRepository commentRepository) {
+    public ItemServiceImpl(ItemRepository itemRepository,
+                           UserRepository userRepository,
+                           BookingRepository bookingRepository,
+                           CommentRepository commentRepository,
+                           ItemRequestRepository itemRequestRepository) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.bookingRepository = bookingRepository;
         this.commentRepository = commentRepository;
+        this.itemRequestRepository = itemRequestRepository;
     }
 
     @Override
@@ -57,6 +66,13 @@ public class ItemServiceImpl implements ItemService {
 
         Item item = ItemMapper.toItem(itemDto);
         item.setOwner(user.get());
+
+        Long requestId = itemDto.getRequestId();
+
+        if (requestId != null) {
+            Optional<ItemRequest> optionalItemRequest = itemRequestRepository.findById(requestId);
+            optionalItemRequest.ifPresent(item::setRequest);
+        }
 
         Item createdItem = itemRepository.save(item);
         logger.info("Создана вещь с id={}", createdItem.getId());
@@ -125,14 +141,18 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ItemDto> getAllItems(Long userId) {
+    public Collection<ItemDto> getAllItems(Long userId, Long from, Long size) {
         Optional<User> owner = userRepository.findById(userId);
 
         if (owner.isEmpty()) {
             throw new UserNotFoundException("Пользователь " + userId + " не существует");
         }
 
-        Collection<Item> items = itemRepository.findAllByOwner(owner.get());
+        PagingParametersChecker.check(from, size);
+
+        Pageable pageable = PageRequest.of(from.intValue() / size.intValue(), size.intValue());
+
+        Collection<Item> items = itemRepository.findAllByOwner(owner.get(), pageable).toList();
 
         Collection<ItemDto> itemDtos = new ArrayList<>();
 
@@ -153,8 +173,12 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ItemDto> searchItems(String text) {
-        Collection<ItemDto> items = itemRepository.search(text).stream()
+    public Collection<ItemDto> searchItems(String text, Long from, Long size) {
+        PagingParametersChecker.check(from, size);
+
+        Pageable pageable = PageRequest.of(from.intValue() / size.intValue(), size.intValue());
+
+        Collection<ItemDto> items = itemRepository.search(text, pageable).stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
 

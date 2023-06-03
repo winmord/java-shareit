@@ -18,6 +18,7 @@ public class ItemMapper {
                 .available(item.getAvailable())
                 .lastBooking(item.getLastBooking() == null ? null : BookingMapper.toBookingShortDto(item.getLastBooking()))
                 .nextBooking(item.getNextBooking() == null ? null : BookingMapper.toBookingShortDto(item.getNextBooking()))
+                .requestId(item.getRequest() == null ? null : item.getRequest().getId())
                 .build();
     }
 

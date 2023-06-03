@@ -23,7 +23,8 @@ public class ErrorHandler {
             ItemNotFoundException.class,
             UserNotFoundException.class,
             UserAccessDeniedException.class,
-            BookingNotFoundException.class
+            BookingNotFoundException.class,
+            ItemRequestNotFoundException.class
     })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse itemNotFound(final RuntimeException e) {

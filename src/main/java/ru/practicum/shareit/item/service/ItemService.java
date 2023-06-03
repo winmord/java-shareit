@@ -12,9 +12,9 @@ public interface ItemService {
 
     ItemDto getItem(Long itemId, Long userId);
 
-    Collection<ItemDto> getAllItems(Long userId);
+    Collection<ItemDto> getAllItems(Long userId, Long from, Long size);
 
-    Collection<ItemDto> searchItems(String text);
+    Collection<ItemDto> searchItems(String text, Long from, Long size);
 
     CommentDto addComment(Long itemId, CommentDto commentDto, Long userId);
 }

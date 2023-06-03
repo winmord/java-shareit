@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class ItemRequestServiceImpl implements ItemRequestService {
-    private final Logger logger = LoggerFactory.getLogger(ItemRequestServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(ItemRequestServiceImpl.class);
     private final ItemRequestRepository itemRequestRepository;
     private final UserRepository userRepository;
 
@@ -54,7 +54,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         ItemRequest itemRequest = ItemRequestMapper.toItemRequest(itemRequestDto, user);
         ItemRequest savedItemRequest = itemRequestRepository.save(itemRequest);
 
-        logger.info("Сохранён запрос " + savedItemRequest.getId());
+        logger.info("Сохранён запрос {}", savedItemRequest.getId());
 
         return ItemRequestMapper.toItemRequestDto(savedItemRequest);
     }
@@ -77,7 +77,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
             itemRequestDtos.add(ItemRequestMapper.toItemRequestDtoWithItems(itemRequest, items));
         }
 
-        logger.info("Получено " + itemRequests.size() + " запросов пользователя " + userId);
+        logger.info("Получено {} запросов пользователя {}", itemRequests.size(), userId);
 
         return itemRequestDtos;
     }
@@ -97,7 +97,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         }
 
         ItemRequest itemRequest = optionalItemRequest.get();
-        logger.info("Получен запрос " + requestId);
+        logger.info("Получен запрос {}", requestId);
 
         Collection<ItemDto> items = itemRepository.findAllByRequest(itemRequest).stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
 
@@ -119,7 +119,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
             itemRequestDtos.add(ItemRequestMapper.toItemRequestDtoWithItems(itemRequest, items));
         }
 
-        logger.info("Получено " + itemRequests.size() + " запросов пользователя " + userId);
+        logger.info("Получено {} запросов пользователя {}", itemRequests.size(), userId);
 
         return itemRequestDtos;
     }

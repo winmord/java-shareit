@@ -26,6 +26,7 @@ import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.validation.PagingParametersChecker;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -147,6 +148,8 @@ public class ItemServiceImpl implements ItemService {
             throw new UserNotFoundException("Пользователь " + userId + " не существует");
         }
 
+        PagingParametersChecker.check(from, size);
+
         Pageable pageable = PageRequest.of(from.intValue() / size.intValue(), size.intValue());
 
         Collection<Item> items = itemRepository.findAllByOwner(owner.get(), pageable).toList();
@@ -171,6 +174,8 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional(readOnly = true)
     public Collection<ItemDto> searchItems(String text, Long from, Long size) {
+        PagingParametersChecker.check(from, size);
+
         Pageable pageable = PageRequest.of(from.intValue() / size.intValue(), size.intValue());
 
         Collection<ItemDto> items = itemRepository.search(text, pageable).stream()

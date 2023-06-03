@@ -24,6 +24,7 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.validation.PagingParametersChecker;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -151,12 +152,10 @@ public class BookingServiceImpl implements BookingService {
             throw new UserNotFoundException("Пользователь " + userId + " не найден");
         }
 
+        PagingParametersChecker.check(from, size);
+
         Collection<Booking> bookings = Collections.emptyList();
         LocalDateTime now = LocalDateTime.now();
-
-        if (from < 0 || size <= 0) {
-            throw new IllegalArgumentException("Некорректные параметры пагинации");
-        }
 
         Pageable pageable = PageRequest.of(from.intValue() / size.intValue(), size.intValue(), Sort.by("start").descending());
 
@@ -192,12 +191,10 @@ public class BookingServiceImpl implements BookingService {
             throw new UserNotFoundException("Пользователь " + userId + " не найден");
         }
 
+        PagingParametersChecker.check(from, size);
+
         Collection<Booking> bookings = Collections.emptyList();
         LocalDateTime now = LocalDateTime.now();
-
-        if (from < 0 || size <= 0) {
-            throw new IllegalArgumentException("Некорректные параметры пагинации");
-        }
 
         Pageable pageable = PageRequest.of(from.intValue() / size.intValue(), size.intValue(), Sort.by("start").descending());
 

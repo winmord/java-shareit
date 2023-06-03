@@ -8,6 +8,8 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.validation.ValidationGroups;
 
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -42,19 +44,21 @@ public class ItemController {
 
     @GetMapping
     public Collection<ItemDto> getAllItems(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                           @RequestParam(name = "from", required = false, defaultValue = "0") Long from,
-                                           @RequestParam(name = "size", required = false, defaultValue = "20") Long size) {
+                                           @PositiveOrZero @RequestParam(name = "from", required = false, defaultValue = "0") Long from,
+                                           @Positive @RequestParam(name = "size", required = false, defaultValue = "20") Long size) {
         return itemService.getAllItems(userId, from, size);
     }
 
+    @Validated
     @GetMapping("/search")
     public Collection<ItemDto> searchItems(@RequestParam(name = "text") String text,
-                                           @RequestParam(name = "from", required = false, defaultValue = "0") Long from,
-                                           @RequestParam(name = "size", required = false, defaultValue = "20") Long size) {
+                                           @PositiveOrZero @RequestParam(name = "from", required = false, defaultValue = "0") Long from,
+                                           @Positive @RequestParam(name = "size", required = false, defaultValue = "20") Long size) {
         if (text.isBlank()) return Collections.emptyList();
         return itemService.searchItems(text, from, size);
     }
 
+    @Validated
     @PostMapping("/{itemId}/comment")
     public CommentDto addComment(@PathVariable Long itemId,
                                  @Validated @RequestBody CommentDto commentDto,

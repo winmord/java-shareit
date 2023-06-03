@@ -19,6 +19,7 @@ import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.request.service.ItemRequestService;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.validation.PagingParametersChecker;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -106,10 +107,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Override
     public Collection<ItemRequestDto> getOtherItemRequests(Long userId, Long from, Long size) {
         checkUserExists(userId);
-
-        if (from < 0 || size <= 0) {
-            throw new IllegalArgumentException("Некорректные параметры пагинации");
-        }
+        PagingParametersChecker.check(from, size);
 
         Pageable pageable = PageRequest.of(from.intValue() / size.intValue(), size.intValue(), Sort.by("created").descending());
 

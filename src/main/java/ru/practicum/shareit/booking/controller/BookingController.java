@@ -8,6 +8,8 @@ import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.booking.service.BookingService;
 
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.Collection;
 
 @RestController
@@ -42,16 +44,16 @@ public class BookingController {
     @GetMapping
     public Collection<BookingDto> getAllBookings(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                  @RequestParam(name = "state", required = false, defaultValue = "ALL") BookingState state,
-                                                 @RequestParam(name = "from", required = false, defaultValue = "0") Long from,
-                                                 @RequestParam(name = "size", required = false, defaultValue = "20") Long size) {
+                                                 @PositiveOrZero @RequestParam(name = "from", required = false, defaultValue = "0") Long from,
+                                                 @Positive @RequestParam(name = "size", required = false, defaultValue = "20") Long size) {
         return bookingService.getAllBookings(userId, state, from, size);
     }
 
     @GetMapping("/owner")
     public Collection<BookingDto> getOwnerBookings(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                    @RequestParam(name = "state", required = false, defaultValue = "ALL") BookingState state,
-                                                   @RequestParam(name = "from", required = false, defaultValue = "0") Long from,
-                                                   @RequestParam(name = "size", required = false, defaultValue = "20") Long size) {
+                                                   @PositiveOrZero @RequestParam(name = "from", required = false, defaultValue = "0") Long from,
+                                                   @Positive @RequestParam(name = "size", required = false, defaultValue = "20") Long size) {
         return bookingService.getOwnerBookings(userId, state, from, size);
     }
 }

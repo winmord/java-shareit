@@ -291,6 +291,7 @@ class BookingRepositoryTest {
                 Sort.by("start")
         );
         Assertions.assertNotNull(foundBooking);
+        Assertions.assertNotNull(foundBooking.getBookerId());
     }
 
     @Test

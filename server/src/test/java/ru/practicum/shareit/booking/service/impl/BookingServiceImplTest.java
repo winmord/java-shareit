@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.data.domain.Page;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.practicum.shareit.booking.BookingState;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dto.BookingDto;
@@ -184,10 +183,6 @@ class BookingServiceImplTest {
 
     @Test
     void createBooking() {
-        Assertions.assertThrows(
-                MethodArgumentNotValidException.class,
-                () -> bookingService.createBooking(shortBookingsDto.get(2), 2L));
-
         UserNotFoundException userNotFoundException = Assertions.assertThrows(
                 UserNotFoundException.class,
                 () -> bookingService.createBooking(shortBookingsDto.get(0), 4L));

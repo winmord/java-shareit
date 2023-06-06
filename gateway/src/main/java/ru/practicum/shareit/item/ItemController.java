@@ -44,8 +44,8 @@ public class ItemController {
 
     @GetMapping
     public ResponseEntity<Object> getAllItems(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                              @PositiveOrZero @RequestParam(name = "from", required = false, defaultValue = "0") Long from,
-                                              @Positive @RequestParam(name = "size", required = false, defaultValue = "20") Long size) {
+                                              @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Long from,
+                                              @Positive @RequestParam(name = "size", defaultValue = "20") Long size) {
         return itemClient.getAllItems(userId, from, size);
     }
 
@@ -53,8 +53,8 @@ public class ItemController {
     @GetMapping("/search")
     public ResponseEntity<Object> searchItems(@RequestParam(name = "text") String text,
                                               @RequestHeader("X-Sharer-User-Id") Long userId,
-                                              @PositiveOrZero @RequestParam(name = "from", required = false, defaultValue = "0") Long from,
-                                              @Positive @RequestParam(name = "size", required = false, defaultValue = "20") Long size) {
+                                              @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Long from,
+                                              @Positive @RequestParam(name = "size", defaultValue = "20") Long size) {
         return itemClient.searchItems(userId, text, from, size);
     }
 

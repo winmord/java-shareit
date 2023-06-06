@@ -1,16 +1,12 @@
 package ru.practicum.shareit.booking.service.impl;
 
-import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.practicum.shareit.booking.BookingState;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dto.BookingDto;
@@ -46,15 +42,8 @@ public class BookingServiceImpl implements BookingService {
         this.userRepository = userRepository;
     }
 
-    @SneakyThrows
     @Override
     public BookingDto createBooking(BookingShortDto bookingShortDto, Long userId) {
-        if (bookingShortDto.getStart().equals(bookingShortDto.getEnd())
-                || bookingShortDto.getStart().isAfter(bookingShortDto.getEnd())) {
-            throw new MethodArgumentNotValidException(new MethodParameter(
-                    this.getClass().getDeclaredMethod("createBooking", BookingShortDto.class, Long.class), 0), new BeanPropertyBindingResult(bookingShortDto, "bookingShortDto"));
-        }
-
         Long itemId = bookingShortDto.getItemId();
         Optional<Item> optionalItem = itemRepository.findById(itemId);
         Optional<User> optionalUser = userRepository.findById(userId);

@@ -8,8 +8,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Entity
@@ -24,8 +22,6 @@ public class Comment {
     private Long id;
 
     @Column(name = "TEXT")
-    @NotNull
-    @NotBlank
     private String text;
 
     @ManyToOne(fetch = FetchType.LAZY)

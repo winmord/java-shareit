@@ -38,8 +38,8 @@ public class ItemRequestController {
 
     @GetMapping("/all")
     public ResponseEntity<Object> getOtherItemRequests(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                           @PositiveOrZero @RequestParam(name = "from", required = false, defaultValue = "0") Long from,
-                                                           @Positive @RequestParam(name = "size", required = false, defaultValue = "20") Long size) {
+                                                           @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Long from,
+                                                           @Positive @RequestParam(name = "size", defaultValue = "20") Long size) {
         return itemRequestClient.getOtherItemRequests(userId, from, size);
     }
 }
